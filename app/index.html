@@ -1,0 +1,203 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Complaint System</title>
+
+    <style>
+        body {
+            font-family: 'Segoe UI', sans-serif;
+            background: linear-gradient(135deg, #1e3c72, #2a5298);
+            margin: 0;
+            padding: 20px;
+            color: #333;
+        }
+
+        h1 {
+            text-align: center;
+            color: white;
+            margin-bottom: 30px;
+        }
+
+        .container {
+            max-width: 900px;
+            margin: auto;
+        }
+
+        /* GLASS + 3D CARD */
+        .card {
+            background: rgba(255, 255, 255, 0.15);
+            backdrop-filter: blur(10px);
+            padding: 20px;
+            margin: 15px 0;
+            border-radius: 15px;
+            box-shadow: 
+                0 8px 20px rgba(0,0,0,0.3),
+                inset 0 1px 0 rgba(255,255,255,0.2);
+            transition: transform 0.2s ease, box-shadow 0.2s ease;
+            color: white;
+        }
+
+        .card:hover {
+            transform: translateY(-5px);
+            box-shadow: 
+                0 12px 25px rgba(0,0,0,0.4),
+                inset 0 1px 0 rgba(255,255,255,0.3);
+        }
+
+        input {
+            padding: 10px;
+            margin: 5px;
+            width: 45%;
+            border-radius: 8px;
+            border: none;
+            outline: none;
+            background: rgba(255,255,255,0.9);
+        }
+
+        /* MODERN BUTTON */
+        button {
+            padding: 10px 16px;
+            margin: 5px;
+            border: none;
+            border-radius: 8px;
+            background: linear-gradient(135deg, #00c6ff, #0072ff);
+            color: white;
+            cursor: pointer;
+            font-weight: bold;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.3);
+            transition: all 0.2s ease;
+        }
+
+        button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 14px rgba(0,0,0,0.4);
+            background: linear-gradient(135deg, #74ebd5, #009efd);
+        }
+
+        /* PRIORITY COLORS */
+        .priority-HIGH {
+            color: #ff4d4d;
+            font-weight: bold;
+        }
+
+        .priority-MEDIUM {
+            color: #ffc107;
+        }
+
+        .priority-LOW {
+            color: #4caf50;
+        }
+
+        .actions {
+            margin-top: 10px;
+        }
+
+        p {
+            margin: 5px 0;
+        }
+    </style>
+</head>
+
+<body>
+
+<div class="container">
+
+    <h1>Complaint Dashboard</h1>
+
+    <!-- CREATE -->
+    <div class="card">
+        <h3>Create Complaint</h3>
+        <input id="title" placeholder="Title">
+        <input id="status" placeholder="Status (OPEN)">
+        <br>
+        <button onclick="createComplaint()">Create</button>
+        <p id="createResult"></p>
+    </div>
+
+    <!-- SEARCH + FILTER -->
+    <div class="card">
+        <h3>Search / Filter</h3>
+        <input id="searchQuery" placeholder="Search...">
+        <button onclick="search()">Search</button>
+
+        <input id="filterStatus" placeholder="Filter by status">
+        <button onclick="filter()">Filter</button>
+
+        <div class="actions">
+            <button onclick="loadComplaints()">Load All</button>
+        </div>
+    </div>
+
+    <!-- LIST -->
+    <div id="complaintList"></div>
+
+</div>
+
+<script>
+
+const BASE_URL = "http://127.0.0.1:8000";
+
+// CREATE
+async function createComplaint() {
+    const title = document.getElementById("title").value;
+    const status = document.getElementById("status").value;
+
+    const res = await fetch(`${BASE_URL}/complaints`, {
+        method: "POST",
+        headers: {"Content-Type": "application/json"},
+        body: JSON.stringify({ title, status })
+    });
+
+    const data = await res.json();
+    document.getElementById("createResult").innerText =
+        `Created with priority: ${data.priority}`;
+}
+
+// LOAD ALL
+async function loadComplaints() {
+    const res = await fetch(`${BASE_URL}/complaints`);
+    const data = await res.json();
+    display(data);
+}
+
+// SEARCH
+async function search() {
+    const query = document.getElementById("searchQuery").value;
+    const res = await fetch(`${BASE_URL}/complaints/search?query=${query}`);
+    const data = await res.json();
+    display(data);
+}
+
+// FILTER
+async function filter() {
+    const status = document.getElementById("filterStatus").value;
+    const res = await fetch(`${BASE_URL}/complaints/filter?status=${status}`);
+    const data = await res.json();
+    display(data);
+}
+
+// DISPLAY
+function display(data) {
+    const container = document.getElementById("complaintList");
+    container.innerHTML = "";
+
+    data.forEach(c => {
+        const div = document.createElement("div");
+        div.className = "card";
+
+        div.innerHTML = `
+            <h3>${c.title}</h3>
+            <p>Status: ${c.status}</p>
+            <p class="priority-${c.priority}">
+                Priority: ${c.priority}
+            </p>
+        `;
+
+        container.appendChild(div);
+    });
+}
+
+</script>
+
+</body>
+</html>
